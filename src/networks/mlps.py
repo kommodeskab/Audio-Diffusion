@@ -68,9 +68,35 @@ class ImageMLPDecoder(MLP):
         
     def forward(self, x : Tensor) -> Tensor:
         x = super().forward(x)
-        x = F.sigmoid(x)
         return x.view(-1, self.channels, self.height, self.width)
+
+class Image2ImageMLP(MLP):
+    def __init__(
+        self,
+        height: int,
+        width: int,
+        channels: int,
+        hidden_dim: int = 128,
+        num_layers: int = 3,
+    ):
+        input_output_dim = height * width * channels
+        super().__init__(
+            input_dim = input_output_dim,
+            output_dim = input_output_dim,
+            hidden_dim = hidden_dim,
+            num_layers = num_layers,
+        )
+        
+    def forward(self, x : Tensor) -> Tensor:
+        original_shape = x.shape
+        x = x.view(original_shape[0], -1)
+        x = super().forward(x)
+        x = x.view(original_shape)
+        return x
+        
     
 if __name__ == "__main__":
-    encoder = ImageMLPEncoder(28, 28, 1, 32)
-    print(encoder.parameters())
+    encoder = Image2ImageMLP(28, 28, 1)
+    x = torch.randn(10, 1, 28, 28)
+    y = encoder(x)
+    print(y.shape)

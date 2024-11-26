@@ -1,0 +1,12 @@
+_target_: src.lightning_modules.I2SB
+model:
+  _target_: src.networks.UNet2D
+  in_channels: 1
+  out_channels: 1
+  block_out_channels: [32, 32, 32]
+  down_block_types: ['DownBlock2D', 'DownBlock2D', 'DownBlock2D']
+  up_block_types: ['UpBlock2D', 'UpBlock2D', 'UpBlock2D']
+
+num_steps: 10
+min_beta: 1.e-5
+max_beta: 1.e-4

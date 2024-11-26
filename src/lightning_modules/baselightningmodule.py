@@ -6,6 +6,7 @@ import torch
 from torch import Tensor
 from typing import Any
 from pytorch_lightning.utilities import grad_norm
+from torch.utils.data import Dataset
 
 class BaseLightningModule(pl.LightningModule):
     def __init__(self):
@@ -40,6 +41,18 @@ class BaseLightningModule(pl.LightningModule):
     @property
     def logger(self) -> WandbLogger:
         return self.trainer.logger
+    
+    @property
+    def global_step(self) -> int:
+        return self.trainer.global_step
+    
+    @property
+    def train_dataset(self) -> Dataset:
+        return self.trainer.datamodule.train_dataset
+    
+    @property
+    def val_dataset(self) -> Dataset:
+        return self.trainer.datamodule.val_dataset
     
     @staticmethod
     def init_weights(model : nn.Module) -> None:
