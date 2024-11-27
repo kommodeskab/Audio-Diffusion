@@ -2,7 +2,7 @@
 defaults:
   - override /trainer: cpu
   - override /logger: default
-  - override /callbacks: example
+  - override /callbacks: diffusion_callbacks
   - override /model: i2sb
   - override /data: blurred_mnist
 

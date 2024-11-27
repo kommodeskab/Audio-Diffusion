@@ -1,0 +1,2 @@
+plot_samples:
+    _target_: src.callbacks.PlotSamplesCB

@@ -4,6 +4,7 @@ from .utils import get_batch_from_dataset
 import matplotlib.pyplot as plt
 from torch import Tensor
 import wandb
+import torch
 
 def format_batch(batch : Tensor) -> Tensor:
     batch = batch * 0.5 + 0.5
@@ -40,6 +41,21 @@ class PlotSamplesCB(Callback):
         plt.close(fig_1)
         plt.close(fig_2)
         
+        timesteps = torch.linspace(0, pl_module.scheduler.num_steps, 5, dtype=torch.long).tolist()
+        fig, axs = plt.subplots(1, 5, figsize=(10, 10))
+        for i, t in enumerate(timesteps):
+            posterior, _ = pl_module.scheduler.sample_posterior(x0, x1, t)
+            img = format_batch(posterior)[0]
+            cmap = None if img.shape[-1] == 3 else "gray"
+            axs[i].imshow(img, cmap=cmap)
+            axs[i].axis("off")
+        pl_module.logger.log_image(
+            "Posterior samples",
+            [wandb.Image(fig)],
+            step=0
+        )
+        plt.close(fig)
+        
     def on_validation_epoch_end(self, trainer : Trainer, pl_module : I2SB):
         _, x1 = self.batch
         x0_hat = pl_module.sample(x1)
@@ -51,3 +67,37 @@ class PlotSamplesCB(Callback):
             [wandb.Image(fig)],
             step=pl_module.global_step
         )
+        
+class PlotScheduler(Callback):
+    def __init__(self):
+        super().__init__()
+        
+    def on_train_start(self, trainer : Trainer, pl_module : I2SB):
+        scheduler = pl_module.scheduler
+        
+        def plot_values(values : Tensor, name : str):
+            fig, ax = plt.subplots()
+            x_values = torch.linspace(0, 1, len(values))
+            ax.plot(x_values, values)
+            ax.set_title(name)
+            return fig
+        
+        betas = scheduler.betas
+        sigmas_2 = scheduler.sigmas_2
+        sigmas_2_bar = scheduler.sigmas_2_bar
+        
+        figs = [
+            plot_values(betas, "Beta"),
+            plot_values(sigmas_2, "Sigma^2"),
+            plot_values(sigmas_2_bar, "Sigma^2 bar")
+        ]
+        
+        pl_module.logger.log_image(
+            "Scheduler",
+            [wandb.Image(fig) for fig in figs],
+            step=0
+        )
+        
+        for fig in figs:
+            plt.close(fig)
+        

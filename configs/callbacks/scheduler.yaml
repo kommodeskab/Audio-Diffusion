@@ -1,0 +1,2 @@
+plot_scheduler:
+  _target_: src.callbacks.PlotScheduler

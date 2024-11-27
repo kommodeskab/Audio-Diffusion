@@ -8,5 +8,6 @@ model:
   up_block_types: ['UpBlock2D', 'UpBlock2D', 'UpBlock2D']
 
 num_steps: 10
-min_beta: 1.e-5
-max_beta: 1.e-4
+min_beta: 1.e-3
+max_beta: 1.e-2
+T: 1.0
