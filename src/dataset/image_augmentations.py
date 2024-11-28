@@ -50,7 +50,7 @@ class RandomBoxDataset(BaseDataset):
         """
         Returns a tuple of the original image and the image with a random box.
         """
-        original_image = self.dataset[idx]
+        original_image : Tensor = self.dataset[idx]
         image_with_box = original_image.clone()
         x = torch.randint(0, original_image.shape[-1] - self.box_size, (1,)).item()
         y = torch.randint(0, original_image.shape[-2] - self.box_size, (1,)).item()

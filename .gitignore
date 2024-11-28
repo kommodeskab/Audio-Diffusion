@@ -3,6 +3,7 @@ logs
 outputs
 data
 hpc
+.vscode
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

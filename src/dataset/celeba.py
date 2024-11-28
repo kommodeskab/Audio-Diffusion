@@ -1,9 +1,9 @@
 from torchvision.transforms import ToTensor
 import torch
-from .basedataset import ImageDataset
+from .basedataset import ImageDataset, BaseDataset
 import torchvision
 
-class CelebA:
+class CelebA(BaseDataset):
     def __init__(self, attr : int, on_or_off : bool):
         """
         A special version of the CelebA dataset that only returns images with a specific attribute

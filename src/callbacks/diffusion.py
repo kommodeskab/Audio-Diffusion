@@ -44,7 +44,7 @@ class PlotSamplesCB(Callback):
         timesteps = torch.linspace(0, pl_module.scheduler.num_steps, 5, dtype=torch.long).tolist()
         fig, axs = plt.subplots(1, 5, figsize=(10, 10))
         for i, t in enumerate(timesteps):
-            posterior, _ = pl_module.scheduler.sample_posterior(x0, x1, t)
+            posterior, _, _ = pl_module.scheduler.sample_posterior(x0, x1, t)
             img = format_batch(posterior)[0]
             cmap = None if img.shape[-1] == 3 else "gray"
             axs[i].imshow(img, cmap=cmap)
@@ -58,15 +58,38 @@ class PlotSamplesCB(Callback):
         
     def on_validation_epoch_end(self, trainer : Trainer, pl_module : I2SB):
         _, x1 = self.batch
-        x0_hat = pl_module.sample(x1)
+        trajectory = pl_module.sample(x1, return_trajectory=True)
+        x0_hat = trajectory[-1]
         
+        # first plot grid of samples images
         fig = plot_samples(x0_hat)
-        
         pl_module.logger.log_image(
             "Generated samples",
             [wandb.Image(fig)],
             step=pl_module.global_step
         )
+        
+        # next, plot trjectory of 5 samples
+        timesteps = torch.linspace(0, pl_module.scheduler.num_steps, 5, dtype=torch.long)
+        samples = trajectory[timesteps, :5]
+        # samples.shape = [5, 5, c, h, w]
+        fig, axs = plt.subplots(5, 5, figsize=(10, 10))
+        
+        for i in range(5):
+            row = samples[:, i]
+            formatted_row = format_batch(row)
+            for j in range(5):
+                cmap = None if formatted_row[j].shape[-1] == 3 else "gray"
+                axs[i, j].imshow(formatted_row[j], cmap=cmap)
+                axs[i, j].axis("off")
+        
+        pl_module.logger.log_image(
+            "Trajectory",
+            [wandb.Image(fig)],
+            step=pl_module.global_step
+        )
+        plt.close(fig)
+        
         
 class PlotScheduler(Callback):
     def __init__(self):
