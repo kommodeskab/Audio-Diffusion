@@ -1,0 +1,10 @@
+defaults:
+  - learningratemonitor
+  - modelcheckpoint
+  - richmodelsummary
+  - richprogressbar
+  - timer
+  - swa
+  - earlystopping
+  - scheduler
+  - log_audio

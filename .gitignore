@@ -1,8 +1,7 @@
 src/dataset/data_path.txt
-logs
-outputs
-data
-hpc
+/logs
+/outputs
+/hpc
 .vscode
 
 # Byte-compiled / optimized / DLL files

@@ -1,0 +1,11 @@
+_target_: src.data_modules.BaseDM
+dataset:
+  _target_: src.dataset.RandomBoxDataset
+  dataset:
+    _target_: src.dataset.CelebADataset
+    img_size: 64
+    augment: True
+  box_size: 32
+
+batch_size: 32
+num_workers: 4

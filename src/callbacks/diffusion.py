@@ -8,7 +8,7 @@ import torch
 
 def format_batch(batch : Tensor) -> Tensor:
     batch = batch * 0.5 + 0.5
-    return batch.permute(0, 2, 3, 1).detach().cpu()
+    return batch.permute(0, 2, 3, 1).detach().cpu().clamp(0, 1)
 
 def plot_samples(x : Tensor) -> plt.Figure:
     x = format_batch(x)
@@ -45,10 +45,12 @@ class PlotSamplesCB(Callback):
         fig, axs = plt.subplots(1, 5, figsize=(10, 10))
         for i, t in enumerate(timesteps):
             posterior, _, _ = pl_module.scheduler.sample_posterior(x0, x1, t)
+            posterior = posterior.clamp(-1, 1)
             img = format_batch(posterior)[0]
             cmap = None if img.shape[-1] == 3 else "gray"
             axs[i].imshow(img, cmap=cmap)
             axs[i].axis("off")
+            
         pl_module.logger.log_image(
             "Posterior samples",
             [wandb.Image(fig)],
@@ -58,7 +60,9 @@ class PlotSamplesCB(Callback):
         
     def on_validation_epoch_end(self, trainer : Trainer, pl_module : I2SB):
         _, x1 = self.batch
-        trajectory = pl_module.sample(x1, return_trajectory=True)
+        pl_module.eval()
+        trajectory = pl_module.sample(x1, return_trajectory=True, clamp=True)
+        pl_module.train()
         x0_hat = trajectory[-1]
         
         # first plot grid of samples images
@@ -68,6 +72,7 @@ class PlotSamplesCB(Callback):
             [wandb.Image(fig)],
             step=pl_module.global_step
         )
+        plt.close(fig)
         
         # next, plot trjectory of 5 samples
         timesteps = torch.linspace(0, pl_module.scheduler.num_steps, 5, dtype=torch.long)
@@ -90,6 +95,24 @@ class PlotSamplesCB(Callback):
         )
         plt.close(fig)
         
+        # next, return the predicted sample without using diffusion
+        last_timestep = pl_module.scheduler.to_tensor(
+            pl_module.scheduler.num_steps, 
+            x1.shape[0]
+            ).to(pl_module.device)
+        
+        x1 = x1.to(pl_module.device)
+        pl_module.eval()
+        x0_prediction = pl_module.predict_x0(x1, last_timestep)
+        pl_module.train()
+        fig = plot_samples(x0_prediction)
+        
+        pl_module.logger.log_image(
+            "Samples without diffusion",
+            [wandb.Image(fig)],
+            step=pl_module.global_step
+        )
+        plt.close(fig)
         
 class PlotScheduler(Callback):
     def __init__(self):

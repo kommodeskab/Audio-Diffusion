@@ -1,0 +1,18 @@
+_target_: src.lightning_modules.I2SB
+model:
+  _target_: src.networks.UNet1DWithConv
+  in_channels: 1
+  out_channels: 1
+  kernel_size: 15
+  stride: 4
+  block_out_channels: [64, 64, 128]
+  layers_per_block: 2
+  extra_in_channels: 16
+
+num_steps: 100
+min_beta: 0.1
+max_beta: 1
+T: 1.0
+learning_rate: 1.e-5
+scheduler_patience: 5
+scheduler_factor: 0.1

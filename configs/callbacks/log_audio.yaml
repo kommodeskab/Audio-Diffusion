@@ -1,0 +1,2 @@
+log_audio:
+  _target_: src.callbacks.LogAudio

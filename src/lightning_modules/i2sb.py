@@ -14,6 +14,7 @@ class Scheduler:
         max_beta : float,
         T : float | None = None
         ):
+        self.device = "cpu"
         self.num_steps = num_steps
         self.timesteps = torch.arange(num_steps + 1)
         
@@ -32,17 +33,22 @@ class Scheduler:
         self.sigmas_2 = torch.cumsum(self.betas, 0)
         self.sigmas_2_bar = torch.flip(self.sigmas_2, [0])
         
+    def to_device(self, device : torch.device):
+        self.device = device
+        self.sigmas_2 = self.sigmas_2.to(device)
+        self.sigmas_2_bar = self.sigmas_2_bar.to(device)
+        
     def shape_for_constant(self, shape : tuple[int]) -> tuple[int]:
         return [-1] + [1] * (len(shape) - 1) 
     
     def to_tensor(self, value : int, batch_size : int) -> Tensor:
-        return torch.full((batch_size,), value, dtype=torch.long)
+        return torch.full((batch_size,), value, dtype=torch.long).to(self.device)
     
     def reshape_constants(self, constants : list[Tensor], shape : tuple[int]) -> list[Tensor]:
         return [constant.view(self.shape_for_constant(shape)) for constant in constants]     
  
     def sample_timestep(self, batch_size : int) -> Tensor:
-        return torch.randint(1, self.num_steps + 1, (batch_size,))
+        return torch.randint(1, self.num_steps + 1, (batch_size,)).to(self.device)
     
     def sample_posterior(self, x0 : Tensor, x1 : Tensor, n : int | None = None) -> tuple[Tensor, Tensor]:
         shape = x0.shape
@@ -71,6 +77,9 @@ class I2SB(BaseLightningModule):
         num_steps : int,
         min_beta : float,
         max_beta : float,
+        learning_rate : float = 1e-4,
+        scheduler_patience : int = 5,
+        scheduler_factor : float = 0.5,
         target : Literal["flow", "terminal"] = "flow",
         T : float | None = None
         ):
@@ -83,6 +92,10 @@ class I2SB(BaseLightningModule):
             max_beta=max_beta,
             T=T
         )
+        
+    def on_train_start(self):
+        self.scheduler.to_device(self.device)
+        return super().on_train_start()
         
     def forward(self, x : Tensor, timesteps : Tensor) -> Tensor:
         return self.model(x, timesteps)
@@ -123,9 +136,10 @@ class I2SB(BaseLightningModule):
         self, 
         x : Tensor, 
         num_inference_steps : int | None = None,
-        return_trajectory : bool = False
+        return_trajectory : bool = False,
+        clamp : bool = False,
         ) -> Tensor:
-        
+        x = x.to(self.device)
         batch_size = x.shape[0]
         if num_inference_steps is None:
             timesteps = self.scheduler.timesteps.tolist()
@@ -157,9 +171,21 @@ class I2SB(BaseLightningModule):
             trajectories.append(x)
         
         trajectories = torch.stack(trajectories, dim=0)
+        
+        if clamp:
+            trajectories = torch.clamp(trajectories, -1, 1)
+            
         return trajectories if return_trajectory else trajectories[-1]
-                
+
     def configure_optimizers(self):
-        optim = torch.optim.Adam(self.parameters(), lr=1e-4)
-        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optim, mode='min', factor=0.5, patience=5)
+        optim = torch.optim.Adam(
+            self.parameters(), 
+            lr=self.hparams.learning_rate
+            )
+        scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+            optim, 
+            mode='min', 
+            factor=self.hparams.scheduler_factor, 
+            patience=self.hparams.scheduler_patience
+            )
         return {"optimizer": optim, "lr_scheduler": scheduler, "monitor": "loss/val"}

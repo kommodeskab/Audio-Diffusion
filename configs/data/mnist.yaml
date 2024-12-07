@@ -1,0 +1,7 @@
+_target_: src.data_modules.BaseDM
+dataset:
+  _target_: src.dataset.EMNISTDataset
+  split: 'digits'
+  img_size: 32
+batch_size: 32
+num_workers: 4

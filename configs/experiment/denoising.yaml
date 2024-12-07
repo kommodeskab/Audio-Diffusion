@@ -1,0 +1,15 @@
+# @package _global_
+defaults:
+  - override /trainer: gpu
+  - override /logger: default
+  - override /callbacks: audio_callbacks
+  - override /model: audio
+  - override /data: noisy_speech
+
+project_name: 'example'
+task_name: 'denoising'
+
+trainer:
+  log_every_n_steps: 10
+  # limit_train_batches: 100
+  # limit_val_batches: 5

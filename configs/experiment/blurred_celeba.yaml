@@ -1,0 +1,17 @@
+# @package _global_
+defaults:
+  - override /trainer: gpu
+  - override /logger: default
+  - override /callbacks: diffusion_callbacks
+  - override /model: celeba
+  - override /data: blurred_celeba
+
+project_name: 'example'
+task_name: 'celeba'
+
+continue_from_id: '281124225319'
+
+trainer:
+  log_every_n_steps: 10
+  # limit_train_batches: 100
+  # limit_val_batches: 5

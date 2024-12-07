@@ -1,0 +1,7 @@
+_target_: src.data_modules.BaseDM
+dataset:
+  _target_: src.dataset.NoisySpeech
+  audio_length: 3
+  sample_rate: 8000
+batch_size: 8
+num_workers: 4

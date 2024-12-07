@@ -1,0 +1,12 @@
+_target_: src.lightning_modules.I2SB
+model:
+  _target_: src.networks.PretrainedUNet2D
+  model_id: 'FIMH/ddpm-celebahq-finetuned-butterflies-2epochs'
+
+num_steps: 100
+min_beta: 0.1
+max_beta: 1
+T: 1.0
+learning_rate: 1.e-5
+scheduler_patience: 10
+scheduler_factor: 0.5

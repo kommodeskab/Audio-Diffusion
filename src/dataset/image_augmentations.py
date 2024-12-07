@@ -9,6 +9,7 @@ class BlurImageDataset(BaseDataset):
         self, 
         dataset : Dataset,
         kernel_size : int = 5,
+        sigma : float = 1,
         ):
         """
         Returns a dataset that blurs the images in the given dataset.
@@ -16,7 +17,7 @@ class BlurImageDataset(BaseDataset):
         
         super().__init__()
         self.dataset = dataset
-        self.blur = GaussianBlur(kernel_size = kernel_size)
+        self.blur = GaussianBlur(kernel_size = kernel_size, sigma=sigma)
         
     def __len__(self):
         return len(self.dataset)

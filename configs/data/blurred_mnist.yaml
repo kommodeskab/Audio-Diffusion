@@ -1,0 +1,11 @@
+_target_: src.data_modules.BaseDM
+dataset:
+  _target_: src.dataset.BlurImageDataset
+  dataset:
+    _target_: src.dataset.EMNIST
+    split: 'digits'
+    img_size: 32
+  kernel_size: 31
+
+batch_size: 32
+num_workers: 4

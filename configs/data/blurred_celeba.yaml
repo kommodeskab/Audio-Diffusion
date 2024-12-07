@@ -1,0 +1,12 @@
+_target_: src.data_modules.BaseDM
+dataset:
+  _target_: src.dataset.BlurImageDataset
+  dataset:
+    _target_: src.dataset.CelebADataset
+    img_size: 64
+    augment: True
+  kernel_size: 31
+  sigma: 3.0
+
+batch_size: 64
+num_workers: 4

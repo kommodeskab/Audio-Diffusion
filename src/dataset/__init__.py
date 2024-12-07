@@ -7,3 +7,4 @@ from .emnist import EMNIST
 from .celeba import CelebADataset
 from .basedataset import BaseDataset, ImageDataset
 from .image_augmentations import BlurImageDataset, RandomBoxDataset
+from .audio import NoisySpeech, NoisySpeechSpectrogram
